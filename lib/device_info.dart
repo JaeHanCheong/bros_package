@@ -1,9 +1,11 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
-import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class DeviceInfoUtility {
   static final TargetPlatform os = defaultTargetPlatform;
@@ -34,7 +36,7 @@ class DeviceInfoUtility {
       _appVersion = packageInfo.version;
       _appBuildNumber = packageInfo.buildNumber;
     } catch (e) {
-      log(e.toString());
+      print(e.toString());
     }
 
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -47,7 +49,7 @@ class DeviceInfoUtility {
           _osVersionString = androidInfo.version.release; // ex) "12"
           _sdkVersion = androidInfo.version.sdkInt;
         } catch (e) {
-          log(e.toString());
+          print(e.toString());
         }
         break;
       case TargetPlatform.iOS:
@@ -56,7 +58,7 @@ class DeviceInfoUtility {
           _modelName = iosInfo.utsname.machine; // ex) "iPhone12,1"
           _osVersionString = iosInfo.systemVersion; // ex) "15.5"
         } catch (e) {
-          log(e.toString());
+          print(e.toString());
         }
         break;
       default:
