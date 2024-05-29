@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -84,7 +83,8 @@ class BluetoothConnectSheet {
 
       subscription = FlutterBluePlus.onScanResults.listen((results) {
         ref.read(scanResultsProvider.notifier).update((state) => results);
-        print('스캔결과:${ref.read(scanResultsProvider)}');
+        print('results22:${(results)}');
+        print('스캔결과22:${ref.read(scanResultsProvider)}');
       }, onError: (e) {
         debugPrint('## :: Error $e');
       });
