@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:thinkbros/connection_state_container.dart';
+import 'package:thinkbros/components/connection_state_container.dart';
 import 'package:thinkbros/permissions.dart';
 import 'package:thinkbros/thinkbros.dart';
 
@@ -50,14 +50,16 @@ class BluetoothConnectSheet {
     if (Platform.isAndroid) {
       if (await Permission.bluetoothScan.isPermanentlyDenied &&
           context.mounted) {
-        await openBluetoothDeniedDialog(context: context);
+        await PermissionUtility.openBluetoothDeniedDialog(
+            context: context, title: '안내');
       }
     } else {
       if (await Permission.bluetooth.isPermanentlyDenied &&
           (FlutterBluePlus.adapterStateNow ==
               BluetoothAdapterState.unauthorized) &&
           context.mounted) {
-        await openBluetoothDeniedDialog(context: context);
+        await PermissionUtility.openBluetoothDeniedDialog(
+            context: context, title: '안내');
       }
       print('@@@블루투스 아웃');
     }
@@ -118,49 +120,4 @@ class BluetoothConnectSheet {
       });
     }
   }
-}
-
-Future<void> openBluetoothDeniedDialog({
-  required BuildContext context,
-  String title = '안내',
-}) async {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog.adaptive(
-        title: Text(title),
-        content: const Text('블루투스 기능을 켜지 않으면 해당 기능을 사용할 수 없습니다.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text('닫기'),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (context.mounted) {
-                final resultState =
-                    await PermissionUtility.checkBluetoothPermission();
-
-                if (resultState) {
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-                } else {
-                  AppSettings.openAppSettings();
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-                }
-              }
-            },
-            child: const Text('설정으로'),
-          ),
-        ],
-      );
-    },
-  );
 }
