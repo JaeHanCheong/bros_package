@@ -1,65 +1,38 @@
 library thinkbros;
 
-import 'dart:async';
-import 'dart:io';
-
-import 'package:flutter/widgets.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:thinkbros/blutooth_sheet.dart';
-
-/// A Calculator.
-StateProvider<bool> bluetoothConditionStateProvider =
-    StateProvider<bool>((ref) => true);
-StateProvider<List<ScanResult>> scanResultsProvider =
-    StateProvider<List<ScanResult>>((ref) => []);
-late final StreamSubscription subscription;
-final onCharacteristicReceivedProvider =
-    Provider<Stream<OnCharacteristicReceivedEvent>>((ref) {
-  return FlutterBluePlus.events.onCharacteristicReceived;
-});
-final barcodeResultProvider =
-    StateProvider<String>((ref) => '블루투스 연결 후 바코드를 스캔해주세요');
+import 'package:flutter/services.dart';
 
 class Bros {
-  static final barcodeResultProvider =
-      StateProvider<String>((ref) => '블루투스 연결 후 바코드를 스캔해주세요');
+  static Future<bool> print({
+    int? printCount = 1,
+    String? uri = 'GS1_gs25.gsretail.com/01/08808244101109/',
+    String? goodsName = '제주삼다수 그린 0.5L',
+    int? discount = 10,
+    String? printerName = '',
+    required int price,
+  }) async {
+    const methodChannel = MethodChannel('printer');
 
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
+    // 할인된 가격 계산
+    int discountedPrice({required int price, required int discountPercent}) {
+      double discount = (price * (discountPercent / 100)).toDouble();
+      int discountedPrice = (price - discount).round();
+      return discountedPrice;
+    }
 
-  static blutoothConnectSheet(
-      {required WidgetRef ref, required BuildContext context}) async {
-    BluetoothConnectSheet.up(ref, context);
-  }
+    final printData = {
+      'goodsName': goodsName,
+      'printCount': printCount.toString(),
+      'uri': uri,
+      'price': price.toString(),
+      'discount': discount.toString(),
+      'discountPrice':
+          discountedPrice(price: price, discountPercent: discount ?? 10)
+              .toString(),
+      'printerName': printerName,
+    };
 
-  static initScanner({required WidgetRef ref}) {
-    subscription =
-        ref.read(onCharacteristicReceivedProvider).listen((sequence) async {
-      String decodedString = String.fromCharCodes(sequence.value);
-      decodedString = decodedString.replaceAll('\r', '');
-      ref.read(barcodeResultProvider.notifier).state = decodedString;
-      if (decodedString.isNotEmpty) {
-        // 10분 미사용 시 해제를 위한 dateTime 기입
-        String remoteId = sequence.device.remoteId.toString();
-        // final convertedRemoteId =
-        Platform.isAndroid
-            ? remoteId.replaceAll(':', '')
-            : remoteId.replaceAll('-', '');
-        if (decodedString.length == 18) {
-          // 뒤 5자리중 1로 시작하면 일자(2)+월(2), 2로 시작하면 시간(2) + 일자(2)
-          var additionalCode = decodedString.substring(13);
-
-          if (additionalCode.startsWith("1") ||
-              additionalCode.startsWith("2")) {
-            decodedString = decodedString.substring(0, 13);
-          }
-        }
-
-        // ref
-        //     .read(historyListProvider.notifier)
-        //     .addHistoryList(barcode: decodedString, ref: ref);
-      }
-    });
+    final result = await methodChannel.invokeMethod('print', printData);
+    return result;
   }
 }
